@@ -83,6 +83,11 @@ class idList
         return false;
     }
 
+    has(id)
+    {
+        return this.get(id) !== false;
+    }
+
     unset(id)
     {
         var ids = decomposer(id);
@@ -120,8 +125,8 @@ class idList
     }
 }
 
-/* 
-    id          thread_id   to_id 
+/*
+    id          thread_id   to_id
     1           0           0
         2       1           1
             3   1           2
@@ -148,13 +153,13 @@ class chatList
     set(row)
     {
         this.valid(row);
-        var hypothesis, argument, comment;
+        var hypothesis, argument, comment, has;
         if (row.to_id == 0) {
             // work with hypothesis
-            hypothesis = this.hypothesis.get(row.id);
-            if (hypothesis === false) {
+            has = this.hypothesis.has(row.id);
+            hypothesis = this.hypothesis.set(row.id, row);
+            if (!has) {
                 // create new hypothesis
-                hypothesis = this.hypothesis.set(row.id, row);
                 hypothesis.arguments = new idList();
             }
             return hypothesis;
@@ -168,9 +173,9 @@ class chatList
             }
             if (row.to_id == row.thread_id) {
                 // work with arguments
-                argument = hypothesis.arguments.get(row.id);
-                if (argument === false) {
-                    argument = hypothesis.arguments.set(row.id, row);
+                has = hypothesis.arguments.get(row.id);
+                argument = hypothesis.arguments.set(row.id, row);
+                if (!has) {
                     argument.comments = new idList();
                 }
                 return argument;
@@ -179,7 +184,7 @@ class chatList
                 argument = hypothesis.arguments.get(row.to_id);
                 if (argument === false) {
                     var rowArgument = {id: row.to_id, thread_id: row.thread_id, to_id: row.thread_id, empty: true};
-                    argument = hypothesis.arguments.set(row.to_id, row);
+                    argument = hypothesis.arguments.set(row.to_id, rowArgument);
                     argument.comments = new idList();
                 }
                 comment = argument.comments.set(row.id, row);
