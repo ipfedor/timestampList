@@ -46,6 +46,13 @@
         item = item.next[0];
     }
 
+    str += "<br>get list from tail to head";
+    var item = idlist.getTail();
+    while (item.prev.item) {
+        str += " " + item.prev.item;
+        item = item.prev;
+    }
+
     if (second) {
         idlist.unset(second);
         str += "<br>list from min value after second value deleted " + second + ": ";
@@ -59,6 +66,14 @@
         }
     } else {
         str += "<br><span style='color:red'>Second value not founded!</span>";
+    }
+
+
+    str += "<br>get list from tail to head after delete second value";
+    var item = idlist.getTail();
+    while (item.prev.item) {
+        str += " " + item.prev.item;
+        item = item.prev;
     }
 
     var el = document.getElementById("data");
@@ -77,22 +92,30 @@ function measure()
         list.set(row);
     }
     var time = Math.floor(performance.now() - t0);
-    str += "<br>Full time for " + count + " hypothesis passes: " + time + " msec";
+    str += "<br>Full time generation for " + count + " hypothesis passes: " + time + " msec";
     var t0 = performance.now();
     for (var i=count+1; i<=count*2; i++) {
         var row = {id:i, chat_id:1, thread_id: i - count, to_id: i - count, rating: 0, status: 0, ip: "127.0.0.1", dt: new Date(), account_id: 1, meta: {message: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxdklsdskldkllllllllllllllllllllllllllllllllllllllll"}};
         list.set(row);
     }
     var time = Math.floor(performance.now() - t0);
-    str += "<br>Full time for " + count + " arguments passes: " + time + " msec";
+    str += "<br>Full time generation for " + count + " arguments passes: " + time + " msec";
     var t0 = performance.now();
     for (var i=2*count + 1; i<=count*3; i++) {
         var row = {id:i, chat_id:1, thread_id: i - 2*count, to_id: i - count, rating: 0, status: 0, ip: "127.0.0.1", dt: new Date(), account_id: 1, meta: {message: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxdklsdskldkllllllllllllllllllllllllllllllllllllllll"}};
         list.set(row);
     }
     var time = Math.floor(performance.now() - t0);
-    str += "<br>Full time for " + count + " comments passes: " + time + " msec";
-    //list = null;
+    str += "<br>Full time generation for " + count + " comments passes: " + time + " msec";
+    for (var i=1; i<=count * 3; i++) {
+        var row = list.get(i);
+        if (!row || row.item.id != i) {
+            str += "<br>Read id: " + i + ", return : " + String(row ? row.item.id : row);
+        }
+    }
+    var time = Math.floor(performance.now() - t0);
+    str += "<br>Full time read from " + (3 * count) + " row passes: " + time + " msec";
+    list = null;
     el.innerHTML = str;
 }
 </script>

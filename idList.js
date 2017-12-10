@@ -13,11 +13,12 @@ function decomposer(id)
 
 class idItem
 {
-    constructor(id, item)
+    constructor(id, item, prev)
     {
         this.ids = decomposer(id);
         this.item = item;
         this.next = new Array(_MAX_LEVEL);
+        this.prev = prev === undefined ? null : prev;
     }
 }
 
@@ -26,15 +27,20 @@ class idList
     constructor()
     {
         this.head = new idItem(-1, null);
-        this.tail = new idItem(Number.POSITIVE_INFINITY, null);
+        this.tail = new idItem(Number.POSITIVE_INFINITY, null, this.head);
         for (var level = _MAX_LEVEL - 1; level > -1 ; level--) {
             this.head.next[level] = this.tail;
         }
     }
 
-    getHead(id)
+    getHead()
     {
         return this.head;
+    }
+
+    getTail()
+    {
+        return this.tail;
     }
 
     set(id, item)
@@ -57,7 +63,8 @@ class idList
             node.item = item;
             entry = node;
         } else {
-            entry = new idItem(id, item);
+            entry = new idItem(id, item, update[0]);
+            node.prev = entry;
             for (var i = 0; i < _MAX_LEVEL; i++) {
                 if (i == 0 || update[i].next[i].ids[i] != ids[i]) {
                     entry.next[i] = update[i].next[i];
@@ -99,10 +106,11 @@ class idList
             }
             update[level] = node;
         }
-        node = node.next[0];
+        node = node.next[0]; // id node
         if (node === this.tail) {
             return;
         }
+        node.next[0].prev = update[0];
         for (var level = 0; level < _MAX_LEVEL; level++) {
             if (update[level].next[level] !== node) {
                 break;
@@ -140,6 +148,7 @@ class chatList
 {
     constructor()
     {
+        this.list = {};
         this.hypothesis = new idList();     // hypothesis list
     }
 
@@ -150,18 +159,23 @@ class chatList
         }
     }
 
+    get(id)
+    {
+        return (this.list[id] === undefined) ? false : this.list[id];
+    }
+
     set(row)
     {
         this.valid(row);
-        var hypothesis, argument, comment, has;
+        var hypothesis, argument, comment;
         if (row.to_id == 0) {
             // work with hypothesis
-            has = this.hypothesis.has(row.id);
             hypothesis = this.hypothesis.set(row.id, row);
-            if (!has) {
+            if (this.list[row.id] === undefined) {
                 // create new hypothesis
                 hypothesis.arguments = new idList();
             }
+            this.list[row.id] = hypothesis;
             return hypothesis;
         } else {
             hypothesis = this.hypothesis.get(row.thread_id);
@@ -170,14 +184,15 @@ class chatList
                 var rowHypothesis = {id: row.thread_id, thread_id: 0, to_id: 0, empty: true};
                 hypothesis = this.hypothesis.set(row.thread_id, rowHypothesis);
                 hypothesis.arguments = new idList();
+                this.list[row.thread_id] = hypothesis;
             }
             if (row.to_id == row.thread_id) {
                 // work with arguments
-                has = hypothesis.arguments.get(row.id);
                 argument = hypothesis.arguments.set(row.id, row);
-                if (!has) {
+                if (this.list[row.id] === undefined) {
                     argument.comments = new idList();
                 }
+                this.list[row.id] = argument;
                 return argument;
             } else {
                 // work with comments
@@ -186,8 +201,10 @@ class chatList
                     var rowArgument = {id: row.to_id, thread_id: row.thread_id, to_id: row.thread_id, empty: true};
                     argument = hypothesis.arguments.set(row.to_id, rowArgument);
                     argument.comments = new idList();
+                    this.list[row.to_id] = argument;
                 }
                 comment = argument.comments.set(row.id, row);
+                this.list[row.id] = comment;
                 return comment;
             }
         }
