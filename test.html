@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+<script src="idList.js"></script>
+</head>
+<body>
+<h1>Test</h1>
+<div id="data"></div>
+<script>
+    var max = 100000;
+    var n = 16;
+    var idlist = new idList();
+    var min = Number.POSITIVE_INFINITY;
+    for (var i=0; i < n; i++) {
+        var id = Math.floor(1 + Math.random() * max);
+        min = Math.min(min, id);
+        idlist.set(id, id);
+    }
+    var head = idlist.getHead();
+    var str = "<h2>idList (1 .. " + max + "), " + n + " values</h2><pre>";
+    for (var i = _MAX_LEVEL - 1; i > -1; i--) {
+        var node = head;
+        str += "Level: " + i + "\t";
+        while (node.next[i]) {
+            var id = node.ids[i] < 0 ? 'Head' : node.ids[i];
+            str += id + "\t";
+            node = node.next[i];
+        }
+        str += "Tail\n";
+    }
+    str += "</pre>";
+    var item = idlist.get(min);
+    var second = false;
+    str += "get list from min value " + min + ": ";
+    while (item.item) {
+        if (item.item == min) {
+            second = item.next[0].item;
+        }
+        str += " " + item.item;
+        item = item.next[0];
+    }
+    item = idlist.before(min + 1);
+    str += "<br>get list before min + 1 value " + (min + 1) + ": ";
+    while (item.item) {
+        str += " " + item.item;
+        item = item.next[0];
+    }
+
+    if (second) {
+        idlist.unset(second);
+        str += "<br>list from min value after second value deleted " + second + ": ";
+        item = idlist.get(min);
+        while (item.item) {
+            if (item.item == min) {
+                second = item.next[0].item;
+            }
+            str += " " + item.item;
+            item = item.next[0];
+        }
+    } else {
+        str += "<br><span style='color:red'>Second value not founded!</span>";
+    }
+
+    var el = document.getElementById("data");
+    el.innerHTML = str;
+</script>
+</body>
+</html>
