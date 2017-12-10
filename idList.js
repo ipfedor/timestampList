@@ -154,33 +154,35 @@ class chatList
             hypothesis = this.hypothesis.get(row.id);
             if (hypothesis === false) {
                 // create new hypothesis
-                row.arguments = new idList();
                 hypothesis = this.hypothesis.set(row.id, row);
+                hypothesis.arguments = new idList();
             }
             return hypothesis;
         } else {
             hypothesis = this.hypothesis.get(row.thread_id);
             if (hypothesis === false) {
                 // need create fake hypothesis
-                var rowHypothesis = {id: row.thread_id, thread_id: 0, to_id: 0, arguments: new idList(), empty: true};
+                var rowHypothesis = {id: row.thread_id, thread_id: 0, to_id: 0, empty: true};
                 hypothesis = this.hypothesis.set(row.thread_id, rowHypothesis);
+                hypothesis.arguments = new idList();
             }
             if (row.to_id == row.thread_id) {
                 // work with arguments
                 argument = hypothesis.arguments.get(row.id);
                 if (argument === false) {
-                    row.comments = new idList();
                     argument = hypothesis.arguments.set(row.id, row);
+                    argument.comments = new idList();
                 }
                 return argument;
             } else {
                 // work with comments
                 argument = hypothesis.arguments.get(row.to_id);
                 if (argument === false) {
-                    var rowArgument = {id: row.to_id, thread_id: row.thread_id, to_id: row.thread_id, comments: new idList(), empty: true};
+                    var rowArgument = {id: row.to_id, thread_id: row.thread_id, to_id: row.thread_id, empty: true};
                     argument = hypothesis.arguments.set(row.to_id, row);
+                    argument.comments = new idList();
                 }
-                comment = argument.set(row.id, row);
+                comment = argument.comments.set(row.id, row);
                 return comment;
             }
         }

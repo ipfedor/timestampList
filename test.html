@@ -63,6 +63,41 @@
 
     var el = document.getElementById("data");
     el.innerHTML = str;
+
+function measure()
+{
+    var el = document.getElementById("measure");
+    var el_c = document.getElementById("count");
+    var count = parseInt(el_c.value);
+    var str = el.innerHTML;
+    var t0 = performance.now();
+    var list = new chatList();
+    for (var i=1; i<=count; i++) {
+        var row = {id:i, chat_id:1, thread_id: 0, to_id: 0, rating: 0, status: 0, ip: "127.0.0.1", dt: new Date(), account_id: 1, meta: {message: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxdklsdskldkllllllllllllllllllllllllllllllllllllllll"}};
+        list.set(row);
+    }
+    var time = Math.floor(performance.now() - t0);
+    str += "<br>Full time for " + count + " hypothesis passes: " + time + " msec";
+    var t0 = performance.now();
+    for (var i=count+1; i<=count*2; i++) {
+        var row = {id:i, chat_id:1, thread_id: i - count, to_id: i - count, rating: 0, status: 0, ip: "127.0.0.1", dt: new Date(), account_id: 1, meta: {message: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxdklsdskldkllllllllllllllllllllllllllllllllllllllll"}};
+        list.set(row);
+    }
+    var time = Math.floor(performance.now() - t0);
+    str += "<br>Full time for " + count + " arguments passes: " + time + " msec";
+    var t0 = performance.now();
+    for (var i=2*count + 1; i<=count*3; i++) {
+        var row = {id:i, chat_id:1, thread_id: i - 2*count, to_id: i - count, rating: 0, status: 0, ip: "127.0.0.1", dt: new Date(), account_id: 1, meta: {message: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxdklsdskldkllllllllllllllllllllllllllllllllllllllll"}};
+        list.set(row);
+    }
+    var time = Math.floor(performance.now() - t0);
+    str += "<br>Full time for " + count + " comments passes: " + time + " msec";
+    //list = null;
+    el.innerHTML = str;
+}
 </script>
+Count for hypothesis, arguments, comments <input id="count" value="100000">
+<button onclick="measure()">Start measure</button>
+<div id="measure"></div>
 </body>
 </html>
