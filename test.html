@@ -22,7 +22,8 @@
         var node = head;
         str += "Level: " + i + "\t";
         while (node.next[i]) {
-            var id = node.ids[i] < 0 ? 'Head' : node.ids[i];
+            var color = node.ids[i] < node.next[i].ids[i] ? 'green' : 'red';
+            var id = node.ids[i] < 0 ? 'Head' : "<span style='color:" + color + "'>" + node.ids[i] + "</span>";
             str += id + "\t";
             node = node.next[i];
         }
@@ -36,21 +37,24 @@
         if (item.item == min) {
             second = item.next[0].item;
         }
-        str += " " + item.item;
+        var color = (!item.next[0].item || item.item < item.next[0].item) ? 'green' : 'red';
+        str += " <span style='color:" + color + "'>" + item.item + "</span>";
         item = item.next[0];
     }
     item = idlist.before(min + 1);
     str += "<br>get list before min + 1 value " + (min + 1) + ": ";
     while (item.item) {
-        str += " " + item.item;
+        var color = (!item.next[0].item || item.item < item.next[0].item) ? 'green' : 'red';
+        str += " <span style='color:" + color + "'>" + item.item + "</span>";
         item = item.next[0];
     }
 
     str += "<br>get list from tail to head";
     var item = idlist.getTail();
-    while (item.prev.item) {
-        str += " " + item.prev.item;
-        item = item.prev;
+    while (item.plainPrev.item) {
+        var color = (!item.item || item.item > item.plainPrev.item) ? 'green' : 'red';
+        str += " <span style='color:" + color + "'>" + item.plainPrev.item + "</span>";
+        item = item.plainPrev;
     }
 
     if (second) {
@@ -58,22 +62,20 @@
         str += "<br>list from min value after second value deleted " + second + ": ";
         item = idlist.get(min);
         while (item.item) {
-            if (item.item == min) {
-                second = item.next[0].item;
-            }
-            str += " " + item.item;
+            var color = (!item.next[0].item || item.item < item.next[0].item) ? 'green' : 'red';
+            str += " <span style='color:" + color + "'>" + item.item + "</span>";
             item = item.next[0];
         }
     } else {
         str += "<br><span style='color:red'>Second value not founded!</span>";
     }
 
-
     str += "<br>get list from tail to head after delete second value";
     var item = idlist.getTail();
-    while (item.prev.item) {
-        str += " " + item.prev.item;
-        item = item.prev;
+    while (item.plainPrev.item) {
+        var color = (!item.item || item.item > item.plainPrev.item && item.plainPrev.item != second) ? 'green' : 'red';
+        str += " <span style='color:" + color + "'>" + item.plainPrev.item + "</span>";
+        item = item.plainPrev;
     }
 
     var el = document.getElementById("data");

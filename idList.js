@@ -13,26 +13,37 @@ function decomposer(id)
 
 class idItem
 {
-    constructor(id, item)
+    constructor(id, item, plainNext, plainPrev)
     {
         this.ids = decomposer(id);
         this.item = item;
         this.next = new Array(_MAX_LEVEL);
-        //this.prev = prev === undefined ? null : prev;
+        this.plainNext = plainNext ? plainNext : false;
+        this.plainPrev = plainPrev ? plainPrev : false;
+    }
+
+    createSublist()
+    {
+        this.sublist = new idList(this.plainlist, this);
     }
 }
 
 class idList
 {
-    constructor()
+    constructor(plainlist, parent)
     {
-        this.head = new idItem(-1, null);
-        this.tail = new idItem(Number.POSITIVE_INFINITY, null, this.head);
+        if (parent) {
+            this.parent = parent;
+        }
+        this.plainlist = plainlist;
+        this.head = new idItem(-1, null, null, null);
+        this.tail = new idItem(Number.POSITIVE_INFINITY, null, null, this.head);
+        this.head.plainNext = this.tail;
         for (var level = _MAX_LEVEL - 1; level > -1 ; level--) {
             this.head.next[level] = this.tail;
         }
     }
-
+    
     getHead()
     {
         return this.head;
@@ -42,7 +53,7 @@ class idList
     {
         return this.tail;
     }
-
+    
     set(id, item)
     {
         if (!isFinite(id) || id < 1) {
@@ -53,18 +64,31 @@ class idList
         var update = new Array(_MAX_LEVEL);
         for (var level = _MAX_LEVEL - 1; level > -1; level--) {
             while (node.next[level].ids[level] < ids[level]) {
-                node = node.next[level];
+                node = node.next[level]; // node with maximum id, < new id
             }
-            update[level] = node;
+            update[level] = node; // store nearest left node
         }
+        // node with minimum id, > new id
         node = node.next[0];
         var entry;
         if (node.ids[0] === id) {
+            // existed element, replace only
             node.item = item;
             entry = node;
         } else {
             entry = new idItem(id, item, update[0]);
-            //node.prev = entry;
+            var left = update[0];
+            var right = node;
+            /*
+            while (left.id < 0 && this.parent) {
+                // recursive left find
+                left = this.parent;
+            }
+            */
+            left.plainNext = entry;
+            entry.plainPrev = left;
+            entry.plainNext = right;
+            right.plainPrev = entry;
             for (var i = 0; i < _MAX_LEVEL; i++) {
                 if (i == 0 || update[i].next[i].ids[i] != ids[i]) {
                     entry.next[i] = update[i].next[i];
@@ -110,7 +134,16 @@ class idList
         if (node === this.tail) {
             return;
         }
-        //node.next[0].prev = update[0];
+        var left = update[0];
+        var right = node.plainNext;
+        /*
+        while (left.id < 0 && this.parent) {
+            // recursive left find
+            left = this.parent;
+        }
+        */
+        left.plainNext = right;
+        right.plainPrev = left;
         for (var level = 0; level < _MAX_LEVEL; level++) {
             if (update[level].next[level] !== node) {
                 break;
@@ -148,8 +181,8 @@ class chatList
 {
     constructor()
     {
-        this.list = {};
-        this.hypothesis = new idList();     // hypothesis list
+        this.plainlist = {};
+        this.hypothesis = new idList(this.plainlist);     // hypothesis list
     }
 
     valid(row)
@@ -161,7 +194,7 @@ class chatList
 
     get(id)
     {
-        return (this.list[id] === undefined) ? false : this.list[id];
+        return (this.plainlist[id] === undefined) ? false : this.plainlist[id];
     }
 
     set(row)
@@ -171,11 +204,11 @@ class chatList
         if (row.to_id == 0) {
             // work with hypothesis
             hypothesis = this.hypothesis.set(row.id, row);
-            if (this.list[row.id] === undefined) {
+            if (this.plainlist[row.id] === undefined) {
                 // create new hypothesis
-                hypothesis.arguments = new idList();
+                hypothesis.createSublist();
             }
-            this.list[row.id] = hypothesis;
+            this.plainlist[row.id] = hypothesis;
             return hypothesis;
         } else {
             hypothesis = this.hypothesis.get(row.thread_id);
@@ -183,28 +216,28 @@ class chatList
                 // need create fake hypothesis
                 var rowHypothesis = {id: row.thread_id, thread_id: 0, to_id: 0, empty: true};
                 hypothesis = this.hypothesis.set(row.thread_id, rowHypothesis);
-                hypothesis.arguments = new idList();
-                this.list[row.thread_id] = hypothesis;
+                hypothesis.createSublist();
+                this.plainlist[row.thread_id] = hypothesis;
             }
             if (row.to_id == row.thread_id) {
                 // work with arguments
-                argument = hypothesis.arguments.set(row.id, row);
-                if (this.list[row.id] === undefined) {
-                    argument.comments = new idList();
+                argument = hypothesis.sublist.set(row.id, row);
+                if (this.plainlist[row.id] === undefined) {
+                    argument.createSublist();
                 }
-                this.list[row.id] = argument;
+                this.plainlist[row.id] = argument;
                 return argument;
             } else {
                 // work with comments
-                argument = hypothesis.arguments.get(row.to_id);
+                argument = hypothesis.sublist.get(row.to_id);
                 if (argument === false) {
                     var rowArgument = {id: row.to_id, thread_id: row.thread_id, to_id: row.thread_id, empty: true};
-                    argument = hypothesis.arguments.set(row.to_id, rowArgument);
-                    argument.comments = new idList();
-                    this.list[row.to_id] = argument;
+                    argument = hypothesis.sublist.set(row.to_id, rowArgument);
+                    argument.createSublist();
+                    this.plainlist[row.to_id] = argument;
                 }
-                comment = argument.comments.set(row.id, row);
-                this.list[row.id] = comment;
+                comment = argument.sublist.set(row.id, row);
+                this.plainlist[row.id] = comment;
                 return comment;
             }
         }
