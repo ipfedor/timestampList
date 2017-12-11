@@ -13,12 +13,12 @@ function decomposer(id)
 
 class idItem
 {
-    constructor(id, item, prev)
+    constructor(id, item)
     {
         this.ids = decomposer(id);
         this.item = item;
         this.next = new Array(_MAX_LEVEL);
-        this.prev = prev === undefined ? null : prev;
+        //this.prev = prev === undefined ? null : prev;
     }
 }
 
@@ -64,7 +64,7 @@ class idList
             entry = node;
         } else {
             entry = new idItem(id, item, update[0]);
-            node.prev = entry;
+            //node.prev = entry;
             for (var i = 0; i < _MAX_LEVEL; i++) {
                 if (i == 0 || update[i].next[i].ids[i] != ids[i]) {
                     entry.next[i] = update[i].next[i];
@@ -110,7 +110,7 @@ class idList
         if (node === this.tail) {
             return;
         }
-        node.next[0].prev = update[0];
+        //node.next[0].prev = update[0];
         for (var level = 0; level < _MAX_LEVEL; level++) {
             if (update[level].next[level] !== node) {
                 break;
