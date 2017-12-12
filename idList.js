@@ -6,25 +6,32 @@ function decomposer(id)
 {
     var ids = new Array(_MAX_LEVEL);
     for (var level = 0; level < _MAX_LEVEL; level++) {
-        ids[level] = (id > 0 && isFinite(id)) ? Math.floor(id / (256 ** level)) * (256 ** level) : id;
+        ids[level] = isFinite(id) ? Math.floor(id / (256 ** level)) * (256 ** level) : id;
     }
     return ids;
 }
 
 class idItem
 {
-    constructor(id, item, plainNext, plainPrev)
+    constructor(id, item, parent)
     {
         this.ids = decomposer(id);
         this.item = item;
         this.next = new Array(_MAX_LEVEL);
-        this.plainNext = plainNext ? plainNext : false;
-        this.plainPrev = plainPrev ? plainPrev : false;
+        this.plainNext = null;
+        this.plainPrev = null;
+        this.parent = parent ? parent : null;
     }
 
     createSublist()
     {
-        this.sublist = new idList(this.plainlist, this);
+        if (this.sublist === undefined) {
+            this.sublist = new idList(this.plainlist, this);
+            this.sublist.head.plainPrev = this;
+            this.sublist.tail.plainNext = this.plainNext;
+            this.plainNext.plainPrev = this.sublist.tail;
+            this.plainNext = this.sublist.head;
+        }
     }
 }
 
@@ -32,15 +39,18 @@ class idList
 {
     constructor(plainlist, parent)
     {
-        if (parent) {
-            this.parent = parent;
-        }
-        this.plainlist = plainlist;
-        this.head = new idItem(-1, null, null, null);
-        this.tail = new idItem(Number.POSITIVE_INFINITY, null, null, this.head);
+        this.parent = parent ? parent : null;
+        this.plainlist = plainlist ? plainlist : {};
+        this.head = new idItem(Number.NEGATIVE_INFINITY, null, this);
+        this.tail = new idItem(Number.POSITIVE_INFINITY, null, this);
         this.head.plainNext = this.tail;
+        this.tail.plainPrev = this.head;
         for (var level = _MAX_LEVEL - 1; level > -1 ; level--) {
             this.head.next[level] = this.tail;
+        }
+        if (!parent) {
+            this.plainlist[Number.NEGATIVE_INFINITY] = this.head;
+            this.plainlist[Number.POSITIVE_INFINITY] = this.tail;
         }
     }
     
@@ -56,17 +66,17 @@ class idList
     
     set(id, item)
     {
-        if (!isFinite(id) || id < 1) {
+        if (!isFinite(id)) {
             throw new TypeError('Requires numeric id, but received: ' + String(id));
         }
         var ids = decomposer(id);
         var node = this.head;
-        var update = new Array(_MAX_LEVEL);
+        var line = new Array(_MAX_LEVEL);
         for (var level = _MAX_LEVEL - 1; level > -1; level--) {
             while (node.next[level].ids[level] < ids[level]) {
                 node = node.next[level]; // node with maximum id, < new id
             }
-            update[level] = node; // store nearest left node
+            line[level] = node; // store nearest left node
         }
         // node with minimum id, > new id
         node = node.next[0];
@@ -76,26 +86,19 @@ class idList
             node.item = item;
             entry = node;
         } else {
-            entry = new idItem(id, item, update[0]);
-            var left = update[0];
-            var right = node;
-            /*
-            while (left.id < 0 && this.parent) {
-                // recursive left find
-                left = this.parent;
-            }
-            */
-            left.plainNext = entry;
-            entry.plainPrev = left;
-            entry.plainNext = right;
-            right.plainPrev = entry;
+            entry = new idItem(id, item, node.parent);
+            line[0].plainNext = entry;
+            entry.plainPrev = line[0];
+            entry.plainNext = node;
+            node.plainPrev = entry;
             for (var i = 0; i < _MAX_LEVEL; i++) {
-                if (i == 0 || update[i].next[i].ids[i] != ids[i]) {
-                    entry.next[i] = update[i].next[i];
-                    update[i].next[i] = entry;
+                if (i == 0 || line[i].next[i].ids[i] != ids[i]) {
+                    entry.next[i] = line[i].next[i];
+                    line[i].next[i] = entry;
                 }
             }
         }
+        this.plainlist[id] = entry;
         return entry;
     }
 
@@ -123,34 +126,30 @@ class idList
     {
         var ids = decomposer(id);
         var node = this.head;
-        var update = new Array(_MAX_LEVEL);
+        var line = new Array(_MAX_LEVEL);
         for (var level = _MAX_LEVEL - 1; level > -1; level--) {
             while (node.next[level].ids[level] < ids[level]) {
                 node = node.next[level];
             }
-            update[level] = node;
+            line[level] = node;
         }
         node = node.next[0]; // id node
         if (node === this.tail) {
+            delete this.plainlist[id];
             return;
         }
-        var left = update[0];
-        var right = node.plainNext;
-        /*
-        while (left.id < 0 && this.parent) {
-            // recursive left find
-            left = this.parent;
-        }
-        */
+        var left = line[0];
+        var right = node.next[0];
         left.plainNext = right;
         right.plainPrev = left;
         for (var level = 0; level < _MAX_LEVEL; level++) {
-            if (update[level].next[level] !== node) {
+            if (line[level].next[level] !== node) {
                 break;
             } else {
-                update[level].next[level] = node.next[level];
+                line[level].next[level] = node.next[level];
             }
         }
+        delete this.plainlist[id];
     }
 
     before(id)
@@ -196,7 +195,63 @@ class chatList
     {
         return (this.plainlist[id] === undefined) ? false : this.plainlist[id];
     }
+    
+    getHead()
+    {
+        return this.plainlist[Number.NEGATIVE_INFINITY];
+    }
 
+    getTail()
+    {
+        return this.plainlist[Number.POSITIVE_INFINITY];
+    }
+
+    // skip children head & tail
+    getPlainNext(item, skip)
+    {
+        if (skip) {
+            do {
+                item = item.plainNext;
+            } while (item.ids[0] === Number.NEGATIVE_INFINITY || item.ids[0] === Number.POSITIVE_INFINITY && item.parent.parent);
+            return item;
+        } else {
+            return item.plainNext;
+        }
+    }
+
+    getPlainPrev(item, skip)
+    {
+        if (skip) {
+            do {
+                item = item.plainPrev;
+            } while (item.ids[0] === Number.POSITIVE_INFINITY || item.ids[0] === Number.NEGATIVE_INFINITY && item.parent.parent);
+            return item;
+        } else {
+            return item.plainPrev;
+        }
+    }
+    
+    isTopHead(item)
+    {
+        return !item.parent.parent && item.ids[0] === Number.NEGATIVE_INFINITY;
+    }
+
+    isTopTail(item)
+    {
+        return !item.parent.parent && item.ids[0] === Number.POSITIVE_INFINITY;
+    }
+
+    unset(id)
+    {
+        var item = this.plainlist[id];
+        if (item) {
+            if (item.sublist && item.sublist.head.plainNext != item.sublist.tail) {
+                throw new TypeError('Can not delete an item with children: ' + String(id));
+            }
+            item.parent.unset(id);
+        }
+    }
+    
     set(row)
     {
         this.valid(row);
@@ -204,10 +259,6 @@ class chatList
         if (row.to_id == 0) {
             // work with hypothesis
             hypothesis = this.hypothesis.set(row.id, row);
-            if (this.plainlist[row.id] === undefined) {
-                // create new hypothesis
-                hypothesis.createSublist();
-            }
             this.plainlist[row.id] = hypothesis;
             return hypothesis;
         } else {
@@ -216,15 +267,12 @@ class chatList
                 // need create fake hypothesis
                 var rowHypothesis = {id: row.thread_id, thread_id: 0, to_id: 0, empty: true};
                 hypothesis = this.hypothesis.set(row.thread_id, rowHypothesis);
-                hypothesis.createSublist();
                 this.plainlist[row.thread_id] = hypothesis;
             }
+            hypothesis.createSublist();
             if (row.to_id == row.thread_id) {
                 // work with arguments
                 argument = hypothesis.sublist.set(row.id, row);
-                if (this.plainlist[row.id] === undefined) {
-                    argument.createSublist();
-                }
                 this.plainlist[row.id] = argument;
                 return argument;
             } else {
@@ -233,9 +281,9 @@ class chatList
                 if (argument === false) {
                     var rowArgument = {id: row.to_id, thread_id: row.thread_id, to_id: row.thread_id, empty: true};
                     argument = hypothesis.sublist.set(row.to_id, rowArgument);
-                    argument.createSublist();
                     this.plainlist[row.to_id] = argument;
                 }
+                argument.createSublist();
                 comment = argument.sublist.set(row.id, row);
                 this.plainlist[row.id] = comment;
                 return comment;

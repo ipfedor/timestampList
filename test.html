@@ -78,6 +78,140 @@
         item = item.plainPrev;
     }
 
+    str += "<br>Test three levels chatList";
+    var chat = new chatList();
+    for (var i = 1; i <= 15; i=i+1) {
+        var row = {id: i, thread_id: 0, to_id: 0};
+        chat.set(row);
+    }
+    for (var i = 16; i <= 30; i=i+1) {
+        var j = Math.floor((i - 16) / 5) * 5 + 1;
+        var row = {id: i, thread_id: j, to_id: j};
+        chat.set(row);
+    }
+    for (var i = 31; i <= 45; i=i+1) {
+        var j = Math.floor((i - 31) / 5) * 5 + 1;
+        var row = {id: i, thread_id: j, to_id: j + 15};
+        chat.set(row);
+    }
+
+    str += "<br>From head to tail";
+    var item = chat.getHead();
+    str += "<pre>";
+    var lv = 0;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        var app = "\t";
+        if (id == 'Head') {
+            lv++;
+            str += "\n" + Array(lv).join("\t");
+        } else if (id == 'Tail') {
+            lv--;
+            app = "\n" + Array(lv+1).join("\t");
+        }
+        str += id + app;
+        item = chat.getPlainNext(item);
+    } while (!chat.isTopTail(item));
+    str += "Tail\n</pre>";
+
+    str += "<br>From tail to head";
+    var item = chat.getTail();
+    str += "<pre>";
+    var lv = 0;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        var app = "\t";
+        if (id == 'Tail') {
+            lv++;
+            str += "\n" + Array(lv).join("\t");
+        } else if (id == 'Head') {
+            lv--;
+            app = "\n" + Array(lv+1).join("\t");
+        }
+        str += id + app;
+        item = chat.getPlainPrev(item);
+    } while (!chat.isTopHead(item));
+    str += "Head\n</pre>";
+
+    str += "<br>From head to tail plainlist<br>";
+    var item = chat.getHead();
+    var lv = 0;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        str += id + " ";
+        item = chat.getPlainNext(item, true);
+    } while (!chat.isTopTail(item));
+    str += "Tail";
+
+    str += "<br>From tail to head plainlist<br>";
+    var item = chat.getTail();
+    var lv = 0;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        str += id + " ";
+        item = chat.getPlainPrev(item, true);
+    } while (!chat.isTopHead(item));
+    str += "Head";
+
+    var n1 = Math.floor(Math.random() * 15) + 1,
+        n2 = Math.floor(Math.random() * 15) + 16,
+        n3 = Math.floor(Math.random() * 15) + 31;
+
+    try {
+        chat.unset(n1);
+    } catch(e) {
+        str += "<br><span style='color:green'>" + e.message + "</span>";
+    }
+    try {
+        chat.unset(n2);
+    } catch(e) {
+        str += "<br><span style='color:green'>" + e.message + "</span>";
+    }
+    try {
+        chat.unset(n3);
+    } catch(e) {
+        str += "<br><span style='color:green'>" + e.message + "</span>";
+    }
+    str += "<br>Repeat, after random delete three elements: " + n1 + ", " + n2 + ", " + n3;
+
+    str += "<br>From head to tail";
+    var item = chat.getHead();
+    str += "<pre>";
+    var lv = 0;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        var app = "\t";
+        if (id == 'Head') {
+            lv++;
+            str += "\n" + Array(lv).join("\t");
+        } else if (id == 'Tail') {
+            lv--;
+            app = "\n" + Array(lv+1).join("\t");
+        }
+        str += id + app;
+        item = chat.getPlainNext(item);
+    } while (!chat.isTopTail(item));
+    str += "Tail\n</pre>";
+
+    str += "<br>From tail to head";
+    var item = chat.getTail();
+    str += "<pre>";
+    var lv = 0;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        var app = "\t";
+        if (id == 'Tail') {
+            lv++;
+            str += "\n" + Array(lv).join("\t");
+        } else if (id == 'Head') {
+            lv--;
+            app = "\n" + Array(lv+1).join("\t");
+        }
+        str += id + app;
+        item = chat.getPlainPrev(item);
+    } while (!chat.isTopHead(item));
+    str += "Head\n</pre>";
+
     var el = document.getElementById("data");
     el.innerHTML = str;
 
