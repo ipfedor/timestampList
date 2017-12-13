@@ -1,5 +1,11 @@
 "use strict";
-
+// todo баг с внесением одинакового Id на разные уровни
+// баг с удалением головного элемента в подсписке
+/* удаление 10 удаляет всю предыдущую ветку
+Head	1													2	3	4	5													6	7	8	Tail
+		Head	9							10	11	12	Tail					Head	13							14	15	16	Tail				
+				Head	17	18	19	20	Tail											Head	21	22	23	24	Tail								
+*/
 var _MAX_LEVEL = 7; // 2^53 = (2^8)^7
 
 function decomposer(id)
@@ -13,14 +19,14 @@ function decomposer(id)
 
 class idItem
 {
-    constructor(id, item, parent)
+    constructor(id, item, parentlist)
     {
         this.ids = decomposer(id);
         this.item = item;
         this.next = new Array(_MAX_LEVEL);
         this.plainNext = null;
         this.plainPrev = null;
-        this.parent = parent ? parent : null;
+        this.parentlist = parentlist ? parentlist : null;
     }
 
     createSublist()
@@ -37,9 +43,9 @@ class idItem
 
 class idList
 {
-    constructor(plainlist, parent)
+    constructor(plainlist, parentitem)
     {
-        this.parent = parent ? parent : null;
+        this.parentitem = parentitem ? parentitem : null;
         this.plainlist = plainlist ? plainlist : {};
         this.head = new idItem(Number.NEGATIVE_INFINITY, null, this);
         this.tail = new idItem(Number.POSITIVE_INFINITY, null, this);
@@ -48,7 +54,7 @@ class idList
         for (var level = _MAX_LEVEL - 1; level > -1 ; level--) {
             this.head.next[level] = this.tail;
         }
-        if (!parent) {
+        if (!parentitem) {
             this.plainlist[Number.NEGATIVE_INFINITY] = this.head;
             this.plainlist[Number.POSITIVE_INFINITY] = this.tail;
         }
@@ -86,7 +92,7 @@ class idList
             node.item = item;
             entry = node;
         } else {
-            entry = new idItem(id, item, node.parent);
+            entry = new idItem(id, item, node.parentlist);
             line[0].plainNext = entry;
             entry.plainPrev = line[0];
             entry.plainNext = node;
@@ -138,8 +144,8 @@ class idList
             delete this.plainlist[id];
             return;
         }
-        var left = line[0];
-        var right = node.next[0];
+        var left = node.plainPrev;
+        var right = node.plainNext;
         left.plainNext = right;
         right.plainPrev = left;
         for (var level = 0; level < _MAX_LEVEL; level++) {
@@ -201,7 +207,7 @@ class chatList
         if (skip) {
             do {
                 item = item.plainNext;
-            } while (item.ids[0] === Number.NEGATIVE_INFINITY || item.ids[0] === Number.POSITIVE_INFINITY && item.parent.parent);
+            } while (item.ids[0] === Number.NEGATIVE_INFINITY || item.ids[0] === Number.POSITIVE_INFINITY && item.parentlist.parentitem);
             return item;
         } else {
             return item.plainNext;
@@ -213,7 +219,7 @@ class chatList
         if (skip) {
             do {
                 item = item.plainPrev;
-            } while (item.ids[0] === Number.POSITIVE_INFINITY || item.ids[0] === Number.NEGATIVE_INFINITY && item.parent.parent);
+            } while (item.ids[0] === Number.POSITIVE_INFINITY || item.ids[0] === Number.NEGATIVE_INFINITY && item.parentlist.parentitem);
             return item;
         } else {
             return item.plainPrev;
@@ -222,12 +228,12 @@ class chatList
     
     isTopHead(item)
     {
-        return !item.parent.parent && item.ids[0] === Number.NEGATIVE_INFINITY;
+        return !item.parentlist.parentitem && item.ids[0] === Number.NEGATIVE_INFINITY;
     }
 
     isTopTail(item)
     {
-        return !item.parent.parent && item.ids[0] === Number.POSITIVE_INFINITY;
+        return !item.parentlist.parentitem && item.ids[0] === Number.POSITIVE_INFINITY;
     }
 
     unset(id)
@@ -237,7 +243,7 @@ class chatList
             if (item.sublist && item.sublist.head.plainNext != item.sublist.tail) {
                 throw new TypeError('Can not delete an item with children: ' + String(id));
             }
-            item.parent.unset(id);
+            item.parentlist.unset(id);
         }
     }
     
