@@ -7,7 +7,15 @@
 <h1>Test</h1>
 <div id="data"></div>
 <script>
-    var max = 100000;
+    function tlsm(id, color)
+    {
+        var h = id < 0 ? 'Head' : "<span style='color:" + color + "'>" + node.ids[i] + "</span>";
+        if (id >= 65536)
+            return h + " ";
+        else
+            return h + "\t";
+    }
+    var max = 65536 * 4;
     var n = 16;
     var idlist = new idList();
     var min = Number.POSITIVE_INFINITY;
@@ -24,7 +32,7 @@
         while (node.next[i]) {
             var color = node.ids[i] < node.next[i].ids[i] ? 'green' : 'red';
             var id = node.ids[i] < 0 ? 'Head' : "<span style='color:" + color + "'>" + node.ids[i] + "</span>";
-            str += id + "\t";
+            str += tlsm(node.ids[i], color);
             node = node.next[i];
         }
         str += "Tail\n";
