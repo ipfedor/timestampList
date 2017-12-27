@@ -52,7 +52,7 @@ class idList
             this.plainlist[Number.POSITIVE_INFINITY] = this.tail;
         }
     }
-    
+
     getHead()
     {
         return this.head;
@@ -62,7 +62,7 @@ class idList
     {
         return this.tail;
     }
-    
+
     set(id, item)
     {
         if (!isFinite(id)) {
@@ -166,10 +166,17 @@ class idList
 
 class chatList
 {
-    constructor()
+    constructor(options)
     {
         this.plainlist = {};
         this.hypothesis = new idList(this.plainlist);     // hypothesis list
+    }
+
+    empty()
+    {
+        var head = this.plainlist[Number.NEGATIVE_INFINITY]
+        var tail = this.getPlainNext(head);
+        return this.isTopTail(tail);
     }
 
     valid(row)
@@ -183,7 +190,7 @@ class chatList
     {
         return (this.plainlist[id] === undefined) ? false : this.plainlist[id];
     }
-    
+
     getHead()
     {
         return this.plainlist[Number.NEGATIVE_INFINITY];
@@ -218,7 +225,7 @@ class chatList
             return item.plainPrev;
         }
     }
-    
+
     isTopHead(item)
     {
         return !item.parentlist.parentitem && item.ids[0] === Number.NEGATIVE_INFINITY;
@@ -239,18 +246,19 @@ class chatList
             item.parentlist.unset(id);
         }
     }
-    
+
     set(row)
     {
         this.valid(row);
-        var hypothesis, argument, comment, exist = this.plainlist[row.id];
+        var hypothesis, argument, comment, exist = this.get[row.id];
         if (exist) {
             if (exist.item.thread_id == row.thread_id && exist.item.to_id == row.to_id) {
                 exist.item = row;
                 return exist;
             }
+            // todo: need save ext attributes (template, etc)
             this.unset(row.id);
-        } 
+        }
         if (row.to_id == 0) {
             // work with hypothesis
             hypothesis = this.hypothesis.set(row.id, row);
