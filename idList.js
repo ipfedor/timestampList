@@ -1,11 +1,4 @@
 "use strict";
-// todo баг с внесением одинакового Id на разные уровни
-// баг с удалением головного элемента в подсписке
-/* удаление 10 удаляет всю предыдущую ветку
-Head	1													2	3	4	5													6	7	8	Tail
-		Head	9							10	11	12	Tail					Head	13							14	15	16	Tail				
-				Head	17	18	19	20	Tail											Head	21	22	23	24	Tail								
-*/
 var _MAX_LEVEL = 7; // 2^53 = (2^8)^7
 
 function decomposer(id)
@@ -250,7 +243,14 @@ class chatList
     set(row)
     {
         this.valid(row);
-        var hypothesis, argument, comment;
+        var hypothesis, argument, comment, exist = this.plainlist[row.id];
+        if (exist) {
+            if (exist.item.thread_id == row.thread_id && exist.item.to_id == row.to_id) {
+                exist.item = row;
+                return exist;
+            }
+            this.unset(row.id);
+        } 
         if (row.to_id == 0) {
             // work with hypothesis
             hypothesis = this.hypothesis.set(row.id, row);
