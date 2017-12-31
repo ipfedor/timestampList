@@ -86,10 +86,10 @@ class idList
             entry = node;
         } else {
             entry = new idItem(id, item, node.parentlist);
-            line[0].plainNext = entry;
-            entry.plainPrev = line[0];
-            entry.plainNext = node;
-            node.plainPrev = entry;
+            line[0].next[0].plainPrev.plainNext = entry;
+            entry.plainPrev = line[0].next[0].plainPrev;
+            entry.plainNext = line[0].next[0];
+            line[0].next[0].plainPrev = entry;
             for (var i = 0; i < _MAX_LEVEL; i++) {
                 if (i == 0 || line[i].next[i].ids[i] != ids[i]) {
                     entry.next[i] = line[i].next[i];
