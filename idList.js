@@ -191,6 +191,11 @@ class chatList
         return (this.plainlist[id] === undefined) ? false : this.plainlist[id];
     }
 
+    getParent(el)
+    {
+        return el.parentlist && el.parentlist.parentitem ? el.parentlist && el.parentlist.parentitem : false;
+    }
+
     getHead()
     {
         return this.plainlist[Number.NEGATIVE_INFINITY];
