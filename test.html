@@ -85,6 +85,96 @@
         str += " <span style='color:" + color + "'>" + item.plainPrev.item + "</span>";
         item = item.plainPrev;
     }
+    
+    var rows = {
+        0:{id: 5114, chat_id: 16, thread_id: 0, to_id: 0},
+        1:{id: 5117, chat_id: 16, thread_id: 0, to_id: 0},
+        2:{id: 5116, chat_id: 16, thread_id: 5106, to_id: 5106},
+        3:{id: 5115, chat_id: 16, thread_id: 0, to_id: 0},
+        4:{id: 5113, chat_id: 16, thread_id: 0, to_id: 0},
+        5:{id: 5112, chat_id: 16, thread_id: 0, to_id: 0},
+        6:{id: 5111, chat_id: 16, thread_id: 0, to_id: 0},
+        7:{id: 5110, chat_id: 16, thread_id: 0, to_id: 0},
+        8:{id: 5109, chat_id: 16, thread_id: 5103, to_id: 5103},
+        9:{id: 5106, chat_id: 16, thread_id: 0, to_id: 0},
+        10:{id: 5108, chat_id: 16, thread_id: 5106, to_id: 5106},
+        11:{id: 5107, chat_id: 16, thread_id: 5097, to_id: 5099},
+        12:{id: 5105, chat_id: 16, thread_id: 0, to_id: 0},
+        13:{id: 5104, chat_id: 16, thread_id: 0, to_id: 0},
+        14:{id: 5103, chat_id: 16, thread_id: 0, to_id: 0},
+        15:{id: 5102, chat_id: 16, thread_id: 0, to_id: 0},
+        16:{id: 5101, chat_id: 16, thread_id: 5096, to_id: 5096},
+        17:{id: 5100, chat_id: 16, thread_id: 5097, to_id: 5099},
+        18:{id: 5099, chat_id: 16, thread_id: 5097, to_id: 5097},
+        19:{id: 5098, chat_id: 16, thread_id: 5078, to_id: 5083}
+    }
+    str += "<h2>Test real data three levels chatList</h2>";
+    var chat = new chatList();
+    for (var i in rows) {
+        if (rows[i].id) {
+            chat.set(rows[i]);
+        }
+    }
+    var item = chat.getHead();
+    str += "<pre style='tab-size:5;font-size:11px;'>";
+    str += "<h3>From head to tail</h3>";
+    var line = ['','',''];
+    var lv = -1;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        if (id == 'Head') {
+            line[++lv] += id;
+        } else if (id == 'Tail') {
+            line[lv--] += id;
+        } else {
+            line[lv] += id;
+        }
+        for (i=0; i<line.length; i++) {
+            line[i] += "\t";
+        }
+        item = chat.getPlainNext(item);
+    } while (!chat.isTopTail(item));
+    line[0] += "Tail";
+    str += line.join("\n");
+    str += "<h3>From tail to head</h3><br>";
+    var item = chat.getTail();
+    var line = ['','',''];
+    var lv = -1;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        if (id == 'Tail') {
+            line[++lv] += id;
+        } else if (id == 'Head') {
+            line[lv--] += id;
+        } else {
+            line[lv] += id;
+        }
+        for (i=0; i<line.length; i++) {
+            line[i] += "\t";
+        }
+        item = chat.getPlainPrev(item);
+    } while (!chat.isTopHead(item));
+    line[0] += "Head";
+    str += line.join("\n");
+    str += "<h3>From head to tail plainlist</h3>";
+    var item = chat.getHead();
+    var lv = 0;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        str += id + " ";
+        item = chat.getPlainNext(item, true);
+    } while (!chat.isTopTail(item));
+    str += "Tail";
+
+    str += "<h3>From tail to head plainlist</h3>";
+    var item = chat.getTail();
+    var lv = 0;
+    do {
+        var id = item.ids[0] === Number.NEGATIVE_INFINITY ? "Head" : (item.ids[0] === Number.POSITIVE_INFINITY ? 'Tail' : item.ids[0]);
+        str += id + " ";
+        item = chat.getPlainPrev(item, true);
+    } while (!chat.isTopHead(item));
+    str += "Head";
 
     str += "<h2>Test three levels chatList</h2>";
     var chat = new chatList();

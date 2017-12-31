@@ -25,7 +25,7 @@ class idItem
     createSublist()
     {
         if (this.sublist === undefined) {
-            this.sublist = new idList(this.plainlist, this);
+            this.sublist = new idList(this.parentlist.plainlist, this);
             this.sublist.head.plainPrev = this;
             this.sublist.tail.plainNext = this.plainNext;
             this.plainNext.plainPrev = this.sublist.tail;
@@ -262,7 +262,6 @@ class chatList
         if (row.to_id == 0) {
             // work with hypothesis
             hypothesis = this.hypothesis.set(row.id, row);
-            this.plainlist[row.id] = hypothesis;
             return hypothesis;
         } else {
             hypothesis = this.hypothesis.get(row.thread_id);
@@ -270,13 +269,11 @@ class chatList
                 // need create fake hypothesis
                 var rowHypothesis = {id: row.thread_id, thread_id: 0, to_id: 0, empty: true};
                 hypothesis = this.hypothesis.set(row.thread_id, rowHypothesis);
-                this.plainlist[row.thread_id] = hypothesis;
             }
             hypothesis.createSublist();
             if (row.to_id == row.thread_id) {
                 // work with arguments
                 argument = hypothesis.sublist.set(row.id, row);
-                this.plainlist[row.id] = argument;
                 return argument;
             } else {
                 // work with comments
@@ -284,11 +281,9 @@ class chatList
                 if (argument === false) {
                     var rowArgument = {id: row.to_id, thread_id: row.thread_id, to_id: row.thread_id, empty: true};
                     argument = hypothesis.sublist.set(row.to_id, rowArgument);
-                    this.plainlist[row.to_id] = argument;
                 }
                 argument.createSublist();
                 comment = argument.sublist.set(row.id, row);
-                this.plainlist[row.id] = comment;
                 return comment;
             }
         }
