@@ -63,6 +63,16 @@ class idList
         return this.tail;
     }
 
+    isHead(item)
+    {
+        return this.head === item;
+    }
+
+    isTail(item)
+    {
+        return this.tail === item;
+    }
+
     set(id, item)
     {
         if (!isFinite(id)) {
@@ -238,7 +248,11 @@ class chatList
 
     isTopTail(item)
     {
-        return !item.parentlist.parentitem && item.ids[0] === Number.POSITIVE_INFINITY;
+        var check = item;
+        while (check.ids[0] === Number.POSITIVE_INFINITY && check.plainNext && check.plainNext.item && item.parentlist.parentitem) {
+            check = check.plainNext.item;
+        }
+        return check.ids[0] === Number.POSITIVE_INFINITY;
     }
 
     unset(id)
