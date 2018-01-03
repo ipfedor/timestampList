@@ -250,7 +250,7 @@ class chatList
     {
         var check = item;
         while (check.ids[0] === Number.POSITIVE_INFINITY && check.plainNext && check.plainNext.item && item.parentlist.parentitem) {
-            check = check.plainNext.item;
+            check = check.plainNext;
         }
         return check.ids[0] === Number.POSITIVE_INFINITY;
     }
