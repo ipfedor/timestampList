@@ -5,7 +5,7 @@ function decomposer(id)
 {
     var ids = new Array(_MAX_LEVEL);
     for (var level = 0; level < _MAX_LEVEL; level++) {
-        ids[level] = isFinite(id) ? Math.floor(id / (256 ** level)) * (256 ** level) : id;
+        ids[level] = isFinite(id) ? Math.floor(id / (Math.pow(256, level))) * (Math.pow(256, level)) : id;
     }
     return ids;
 }
